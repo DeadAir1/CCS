@@ -1,0 +1,47 @@
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.*;
+import java.util.Arrays;
+
+public class Klient extends Thread {
+    
+    public static void main(String[] args)
+            throws UnknownHostException, SocketException, IOException, InterruptedException {
+    final int PORT = 12340;
+    DatagramSocket socket = new DatagramSocket();
+    byte buff[] = "CCS DISCOVER".getBytes();
+    InetAddress receiverAddress = InetAddress.getByName("localhost");
+    int receiverPort = PORT;
+    DatagramPacket packetToSend = new DatagramPacket(buff, buff.length, receiverAddress, receiverPort);
+    socket.send(packetToSend);
+    Arrays.fill(buff, (byte) 0); 
+    DatagramPacket receivePacket = new DatagramPacket(buff, buff.length);
+    socket.receive(receivePacket);
+    String val = new String(buff, 0, receivePacket.getLength());
+    System.out.println(val);
+        socket.close();
+        Socket clientSocket = new Socket(receivePacket.getAddress(), receiverPort);
+        DataOutputStream outToServer =
+                new DataOutputStream(clientSocket.getOutputStream());
+        BufferedReader inFromServer =
+                new BufferedReader(new
+                        InputStreamReader(clientSocket.getInputStream()));
+    while(true) {
+        String line = "DIV 4"+"\n";
+        outToServer.writeBytes(line);
+        System.out.print("To server -> " + line);
+        System.out.println("From server -> " + inFromServer.readLine());
+        Thread.sleep(2000);
+
+    }
+    }
+
+
+    
+}
+
+
+
+
