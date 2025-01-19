@@ -4,8 +4,43 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Enumeration;
 
 public class Klient extends Thread {
+    public void getBroadcast(){
+        try {
+                    // Pobranie wszystkich interfejsów sieciowych
+                    Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+                    while (interfaces.hasMoreElements()) {
+                        NetworkInterface networkInterface = interfaces.nextElement();
+
+                        // Pominięcie interfejsów wyłączonych lub bez adresów IP
+                        if (!networkInterface.isUp() || networkInterface.isLoopback()) {
+                            continue;
+                        }
+
+                        // Pobranie adresów dla interfejsu
+                        for (InterfaceAddress address : networkInterface.getInterfaceAddresses()) {
+                            InetAddress inetAddress = address.getAddress();
+
+                            // Sprawdzamy, czy adres to IPv4 (pomijamy IPv6)
+                            if (inetAddress instanceof Inet4Address) {
+                                InetAddress broadcast = address.getBroadcast();
+                                if (broadcast != null) {
+                                    System.out.println("Interfejs: " + networkInterface.getName());
+                                    System.out.println("Adres IP: " + inetAddress.getHostAddress());
+                                    System.out.println("Adres broadcast: " + broadcast.getHostAddress());
+                                    System.out.println("--------------------------------");
+                                }
+                            }
+                        }
+                    }
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                }
+
+
+    }
     
     public static void main(String[] args)
             throws UnknownHostException, SocketException, IOException, InterruptedException {
