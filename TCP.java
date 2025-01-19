@@ -30,7 +30,7 @@ public class TCP extends Thread {
                 ClientHandler clientHandler = new ClientHandler(connectionSocket, raport);
                 clientHandler.start();
             } catch (IOException e) {
-                System.err.println("Pocajfoiwj");
+                System.err.println("Unsuccessful connection to server!");
             }
         }
 

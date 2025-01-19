@@ -14,7 +14,7 @@ public class ClientHandler extends Thread {
     BufferedReader inFromClient;
     DataOutputStream outToClient;
     public void unsuccessful_operation(DataOutputStream outToClient,String operation) throws IOException {
-        raport.setValues_last_10_sec("unsuccessful_operations");
+        raport.setValues_last_10_sec("unsuccessful_operations_count");
         raport.setValues_last_10_sec("operation_count");
         System.out.println(operation  + " ERROR");
         outToClient.writeBytes("ERROR" + '\n');
@@ -40,7 +40,7 @@ public class ClientHandler extends Thread {
                     //Proba wykonania operacji matematycznych
                      try{
                         int result=Functions.math_operation(operation[0],Integer.parseInt(operation[1]),Integer.parseInt(operation[2]));
-                        outToClient.writeBytes(Integer.toString(result)+"\n");
+                        outToClient.writeBytes(result+"\n");
                         System.out.println(operation[0] + " Wynnik: " + result);
                         raport.setValues_last_10_sec("successful_operations");
                         raport.setValues_last_10_sec("operation_count");
@@ -57,7 +57,7 @@ public class ClientHandler extends Thread {
                 }
             }
             catch (IOException e) {
-                System.err.println("hi");
+                System.err.println("Blad podczas komunikacji z klientem");
             }
         }
     }

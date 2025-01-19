@@ -17,6 +17,7 @@ public class Raport extends Thread{
         values_last_10_sec.put("successful_operations",0);
         values_last_10_sec.put("operation_count",0);
         values_last_10_sec.put("unsuccessful_operations_count",0);
+        System.out.println("Raport started");
     }
 
     public void setValues_from_start(String key) {

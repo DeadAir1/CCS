@@ -28,12 +28,20 @@ public class Klient extends Thread {
         BufferedReader inFromServer =
                 new BufferedReader(new
                         InputStreamReader(clientSocket.getInputStream()));
+        String[] tab={"ADD","SUB","MUL","DIV"};
     while(true) {
-        String line = "DIV 4"+"\n";
-        outToServer.writeBytes(line);
-        System.out.print("To server -> " + line);
-        System.out.println("From server -> " + inFromServer.readLine());
-        Thread.sleep(2000);
+        for (int i = 0; i < 4; i++) {
+            int val1 =(int)(Math.random() * (10-1)+1);
+            int val2 =(int)(Math.random() * ((10-1)+1));
+            String line = tab[i] + " "+ val1 + " " + val2 + "\n";
+            outToServer.writeBytes(line);
+            System.out.print("To server -> " + line);
+            System.out.println("From server -> " + inFromServer.readLine());
+            Thread.sleep(2000);
+        }
+
+
+
 
     }
     }

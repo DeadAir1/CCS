@@ -21,8 +21,8 @@ public class Discover extends Thread {
 					socket.receive(packet);
 				} catch (IOException e) {
 					System.err.println("Błąd przy otrzymaniu wiadomosci");
-					Arrays.fill(buf, (byte) 0); 
-					continue ;
+					Arrays.fill(buf, (byte) 0);
+					continue;
 				}
 				String val = new String(buf, 0, packet.getLength());
 				if(val.equals("CCS DISCOVER")){
@@ -32,19 +32,15 @@ public class Discover extends Thread {
 					DatagramPacket response = 
 						new DatagramPacket(responseBuf,responseBuf.length,senderAddress,senderPort);	
 					socket.send(response);
-					Arrays.fill(buf, (byte) 0); 
-
+					Arrays.fill(buf, (byte) 0);
 				}else {	
 					Arrays.fill(buf, (byte) 0); 
-					continue;
-				}
-                
-			}
 
-		}catch(SocketException e){
-			System.err.println("Program nie uruchomil sie na podanym porcie!");	
-		} catch (IOException e) {
-					e.printStackTrace();
-				}finally {socket.close();}
+				}
+			}
+		}catch(IOException e){
+			System.err.println("Program Discover rzucil wyjatek");
+		}
+		finally {socket.close();}
 	}
 }
