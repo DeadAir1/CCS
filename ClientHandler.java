@@ -6,59 +6,75 @@ import java.net.Socket;
 
 public class ClientHandler extends Thread {
     Socket connectionSocket;
-    Raport raport;
+    final Raport raport;
     public ClientHandler(Socket socket,Raport raport){
         this.connectionSocket=socket;
         this.raport=raport;
     }
     BufferedReader inFromClient;
     DataOutputStream outToClient;
-    public void unsuccessful_operation(DataOutputStream outToClient,String operation) throws IOException {
-        raport.setValues_last_10_sec("unsuccessful_operations_count");
-        raport.setValues_last_10_sec("operation_count");
-        System.out.println(operation  + " ERROR");
-        outToClient.writeBytes("ERROR" + '\n');
-    }
-    public void run(){
-        while(true){
-            try {
-                //Inicjalizacja streamow
-                inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-                outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-                //Czytanie wiadomosci od klienta
-                String clientSentence=inFromClient.readLine();
-                //Jezeli klient zamknie polaczenie petla konczy dzialanie
-                if(clientSentence == null){
-                    System.err.println("Polaczenie zakonczone!");
-                    connectionSocket.close();
-                    break;
-                }
-                String [] operation=clientSentence.split(" ");
-                //Sprawdzanie poprawnoscie przeslanych danych
-                if(operation.length==3 ){
-                    if(Functions.isNumber(operation[1]) && Functions.isNumber(operation[2])){
-                    //Proba wykonania operacji matematycznych
-                     try{
-                        int result=Functions.math_operation(operation[0],Integer.parseInt(operation[1]),Integer.parseInt(operation[2]));
-                        outToClient.writeBytes(result+"\n");
-                        System.out.println(operation[0] + " Wynnik: " + result);
-                        raport.setValues_last_10_sec("successful_operations");
-                        raport.setValues_last_10_sec("operation_count");
-                        raport.sum_last_10_sec+=result;
-                        //Przypadek blednej operacji albo nie dozwolonej matematycznej operacji
-                    }catch( IllegalArgumentException | ArithmeticException e ){
-                         unsuccessful_operation(outToClient,operation[0]);
-                    }
-                    }
-                }
-                else{
-                    //Przypadek przeslania nie prawidlowych danych albo nie wystarczajacej ilosci argumetow
-                    unsuccessful_operation(outToClient,operation[0]);
-                }
-            }
-            catch (IOException e) {
-                System.err.println("Blad podczas komunikacji z klientem");
-            }
+    public void unsuccessful_operation(DataOutputStream outToClient,String operation) {
+        synchronized (raport) {
+            raport.setValues_last_10_sec("unsuccessful_operations_count");
+            raport.setValues_last_10_sec("operation_count");
+        }
+        System.out.println(operation + " ERROR");
+        try {
+            outToClient.writeBytes("ERROR" + '\n');
+        } catch(IOException e) {
+            System.err.println("Exception while sending ERROR to client: " + e.getMessage());
         }
     }
+    public void successful_operation(DataOutputStream outToClient,String operation,int result) {
+        try{
+            outToClient.writeBytes(result + "\n");
+        }catch(IOException e) {
+            System.err.println("Exception when sending successful result to client: " + e.getMessage());
+        }
+        System.out.println(operation + " Result: " + result);
+        synchronized (raport){
+            raport.setValues_last_10_sec("successful_operations");
+            raport.setValues_last_10_sec("operation_count");
+            raport.sum_last_10_sec+=result;
+        }
+    }
+    public void run(){
+        try {
+        inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+        outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+        while(true){
+                String clientSentence=inFromClient.readLine();
+                String [] operation=clientSentence.split(" ");
+                if(operation.length==3 ){
+                    if(Functions.isNumber(operation[1]) && Functions.isNumber(operation[2])){
+                     try{
+                        int result=Functions.math_operation(operation[0],Integer.parseInt(operation[1]),Integer.parseInt(operation[2]));
+                        successful_operation(outToClient,operation[0],result);
+                    }catch( IllegalArgumentException | ArithmeticException e ){
+                         unsuccessful_operation(outToClient,operation[0]);
+                         System.out.println(operation[0] + " " + operation[1] + " " + operation[2] + " -> ERROR");
+                        }
+                    }
+                }
+                else {
+                    unsuccessful_operation(outToClient, operation[0]);
+                }
+            }
+        }
+        catch (IOException e) {
+                System.err.println("Exception during communication with the client or the client closed the socket.");
+            }
+        finally{
+            try {
+                connectionSocket.close();
+                inFromClient.close();
+                outToClient.close();
+                System.out.println("Socket closed!");
+            } catch (java.lang.Exception ex) {
+                System.err.println("Exception while closing socket: " + ex.getMessage());
+            }
+
+        }
+        }
+
 }

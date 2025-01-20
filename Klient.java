@@ -33,12 +33,12 @@ public class Klient extends Thread {
         for (int i = 0; i < 4; i++) {
             int val1 =(int)(Math.random() * (10-1)+1);
             int val2 =(int)(Math.random() * ((10-1)+1));
-            String line = tab[i] + " "+ val1 + " " + val2 + "\n";
+            String line = tab[i]+ " " + val2 + "\n";
             outToServer.writeBytes(line);
             System.out.print("To server -> " + line);
             System.out.println("From server -> " + inFromServer.readLine());
-            Thread.sleep(2000);
-        }
+
+        }socket.close();
 
 
 

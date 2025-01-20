@@ -20,10 +20,6 @@ public class Raport extends Thread{
         System.out.println("Raport started");
     }
 
-    public void setValues_from_start(String key) {
-        int value=this.values_from_start.get(key);
-        this.values_from_start.put(key,value+1);
-    }
     public void setValues_last_10_sec(String key) {
         int value=this.values_from_start.get(key);
         this.values_from_start.put(key,value+1);
