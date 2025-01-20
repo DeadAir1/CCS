@@ -9,7 +9,7 @@ public class CCS{
 			System.out.println("Niepoprawny typ argumentow!");
 			return;
 		}
-		final int PORT = Integer.parseInt(args[0]);
+		final  int PORT = Integer.parseInt(args[0]);
 		Discover discover = new Discover(PORT);
 		TCP tcpserver=new TCP(PORT);
 		discover.start();

@@ -1,0 +1,49 @@
+Przez ze mnie zostal napisany program implementujacy klase CCS.Aplikacja jest serwerem obliczeniowym udostępniającym
+trzy funkcjonalności: detekcji usługi, komunikacji z klientem
+oraz raportowania stystyk. Wszystkie te funkcjonalności zrealizowane i są dostępne jednocześnie poprzez dzialanie w
+oddzielnych watkach.
+Uruchamia sie program polecenie "> java -jar CCS.jar <port>" zgodnie z wymaganiami,glowna klasa projektu ktora zawiera
+metode main nazywa sie "CSS" po rozpoczeciu dzialanie sprawdzana jest ilosc i poprawnosc typu argumentow po sprawdzeniu sa
+tworzone i uruchamiane jako oddzielne watki serwer UDP z klasy "Discover" i serwer TCP z klasy "TCP"
+- Klasa Discover posiada poszczegolne atrybuty numer port "PORT" buffor i Datagram packet w kontruktorze klasy jest
+przyjmowany port na ktorym dziala  aplikacja w metodzie run apliakcja probuje utworzyc socket ktory w przypadklu bledu
+bedzie awtomatycznie zamkniety  w przypadku bledu (aplikacja nie przewiduje opcji zamkniecia bo ma ciagle nasluchiwac )
+w petli probuje odebrac wiadomosc co jest obsluzone przez try catch i w nieudanym przypadku petla sie wznawia i aplikacja
+dalej nasluchuje w udanym przypadku sprawdzana jest wiadomosc czy zgodna z oczekiwana jezeli tak to jest wysylana
+odpowiedz pod adress z ktorego otrzymana wiadomosc i aplikacja dalej nasluchuje
+-Klasa TCP ktora tworzy serwer   zawiera atrybuty port ktory jest przyjmowany przy tworzeniu obiektu klasy w kontenerze
+SerwerSocket welcomeSocket,Socket connectionSocket  i obiekt klasy Raport ktory sluzy do gromadzenia statystyk jest
+zmienna statyczna i finalna bo wspolna dla wszystkich klientow
+w metodzie run uruchamiany jest watek obiektu raport (w tym miejscu ze wzgledu na to ze jak nie uda sie utworzyc socket
+to nie bedzie czego raportowac ),po utworzeniu socketa w petli obsuguje sie podlaczania klientow w raporcie zwieksza
+sie liczba polaczen  tworzony jest obiekt klasy "ClientHandler" ktory sluzy do obslugi klientow
+(Dzialanie klasy "Raport"  oraz "ClientHandler" i ich metod bedzie opisane w oddzienym akapicie) i uruchamiany jest watek
+ClientHandler
+-Raport klasa posiada dwie HashMap do przechowywania wartosci jedna przechowuje wartosci sattystyki od poczatku pracy
+a druga za ostatnie 10 sekund pracy tez kalsa ma dwa atrybutry ktore okreszlaja  sumy obliczonych  wartosci od poczatku
+i za ostatnie 10 sekund pracy,obie mapy sa inicjalizowany wartosciami w konstruktorze przechowuja wartsoci takie jak :
+"connection_count","successful_operations","operation_count","unsuccessful_operations_count" metoda setVaslues_last_10_sec
+sluzy do inkrementowania wartosci w mapie values_last_10_sec po kluczu w metodzie run w kazdej iteracji petli watek spi
+10 sekund bo kazde 10 sekund ma byc wypisywany raport potem printuje naglowek potem zwieksza wartosci w mapie values_from_start
+o wartsoci z mapy values_last_10_sec printuje wartosci potem zwieksza sume i printuje sume obliczonych wartosci za caly
+czas pracy po czym printuje kolejny naglowek i printuje wartosci za ostatnie 10 sekund pracy i ustawia wartosci w mapie
+values_last_10_sec na 0 i sum_last_10_sec na 0
+-ClientHandler  klasa przyjmuje socket do ktorego polaczyl sie klient tworzy wejsciowey i wyjsciowy streamy metoda
+unsuccessful_operation sluzyn do aktualizacji statystyk w przypadku nie udanej operacji czyli przy przeslaniu przez
+klienta nie obslugiwanego zadania albo w przypadku nie dozwolonej operacji matematycznej,wysyla ERROR do klienta i
+loguje operacje w konsoli metoda successful_operation jest wywolywana w przeciwnym przypadku czyli kiedy operacja byla
+udana wysyla odpowiedz do klienta aktualizuje dane w raporcie i loguje operacje w konsoli obie wyzej opisane metody
+korzystaja z bloku synchronized zeby uniknac kolizji watkow klientow przy aktualizacji danych we wspolnym watku raport
+metoda run inicjalizuje oba wczesniej wspomniane streamy w petli probuje czytac od klienta jezeli wiadomosc nie jest null
+splituje wiadomosc w przypadku kiedy jest trzy argumety sprawdza czy te argumety odpowiadaja wzorowi(<OPER> <ARG1> <ARG2>)
+jezeli tak to probuje wykonac operacje matematyczna korzystajac z funkjci z klasy Functions ktore bedzie opisane pozniej,
+w udanym przypadku wywoluje funkcje successful_operations a w przypadku wyjatku unsuccessful_operations dzialanie ktorych
+zostalo opisane wczesniej i loguje wartosi nie udanej operacji z wynnikiem ERROR,jezeli ilosc argumentow
+albo ich typ byl nie zgodny jest wywolywana funkcja unsuccessful_operation,w bloku catch przy wyjatku IOException
+jest printowana wiadomosc ze wystapil wyjatek lub klient zamknal polaczenie takie podejscie bylo wybrane zgodnie z
+dokumentacja klasy BufferedReader ktory rzuca wyjatek IOException kiedy odczytuje null,w bloku finally  zamykane sa
+socket i streamy i logowana wiadomosc ze socket zamkniety
+Functions- zawiera dwie metody metoda isNumber sluzy do sprawdzenia czy otzrymany String jest liczba i uzyta do sprawdzenia
+przed konwertacja argumetow w celu unikniecia koniecznosci obslugi wyjatkow w tych miejscach a funkcja math_operations
+przujmuje operatore i dwa argumenty i w zaleznosci od operatora wykonuje matematyczne operacjio a w przypadku nie
+przewidzianego operatora rzucza wyjatek IllegalArgumentException

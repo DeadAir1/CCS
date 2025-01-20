@@ -16,7 +16,7 @@ public abstract class Functions {
             case "SUB": return num1 - num2;
             case "MUL": return num1 * num2;
             case "DIV": return num1 / num2;
-            default: throw new IllegalArgumentException("Invalid operator: " + operator);
+            default: throw new IllegalArgumentException();
         }
       }
 }

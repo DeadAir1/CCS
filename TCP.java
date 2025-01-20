@@ -13,21 +13,21 @@ public class TCP extends Thread {
 
     ServerSocket welcomeSocket;
     Socket connectionSocket;
-    Raport raport=new Raport();
+    static final Raport raport=new Raport();
     public void run(){
-        //Rozpoczencie raportowania
-        raport.start();
         try {
             welcomeSocket = new ServerSocket(PORT);
+            //Rozpoczencie raportowania
+            raport.start();
         } catch (IOException e) {
-            System.err.println("Nie udalo sie odtworzyc server TCP na podanym porcie!");
+            System.err.println("Exception during opening welcome socket!");
         }
         while(true){
             try {
                 //Oczekiwanie na polaczenie
                 connectionSocket = welcomeSocket.accept();
                 raport.setValues_last_10_sec("connection_count");
-                ClientHandler clientHandler = new ClientHandler(connectionSocket, raport);
+                ClientHandler clientHandler = new ClientHandler(connectionSocket);
                 clientHandler.start();
             } catch (IOException e) {
                 System.err.println("Unsuccessful connection to server!");

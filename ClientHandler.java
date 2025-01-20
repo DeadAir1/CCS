@@ -6,17 +6,16 @@ import java.net.Socket;
 
 public class ClientHandler extends Thread {
     Socket connectionSocket;
-    final Raport raport;
-    public ClientHandler(Socket socket,Raport raport){
+
+    public ClientHandler(Socket socket){
         this.connectionSocket=socket;
-        this.raport=raport;
     }
     BufferedReader inFromClient;
     DataOutputStream outToClient;
     public void unsuccessful_operation(DataOutputStream outToClient,String operation) {
-        synchronized (raport) {
-            raport.setValues_last_10_sec("unsuccessful_operations_count");
-            raport.setValues_last_10_sec("operation_count");
+        synchronized (TCP.raport) {
+            TCP.raport.setValues_last_10_sec("unsuccessful_operations_count");
+            TCP.raport.setValues_last_10_sec("operation_count");
         }
         System.out.println(operation + " ERROR");
         try {
@@ -32,10 +31,10 @@ public class ClientHandler extends Thread {
             System.err.println("Exception when sending successful result to client: " + e.getMessage());
         }
         System.out.println(operation + " Result: " + result);
-        synchronized (raport){
-            raport.setValues_last_10_sec("successful_operations");
-            raport.setValues_last_10_sec("operation_count");
-            raport.sum_last_10_sec+=result;
+        synchronized (TCP.raport){
+            TCP.raport.setValues_last_10_sec("successful_operations");
+            TCP.raport.setValues_last_10_sec("operation_count");
+            TCP.raport.sum_last_10_sec+=result;
         }
     }
     public void run(){
@@ -44,7 +43,12 @@ public class ClientHandler extends Thread {
         outToClient = new DataOutputStream(connectionSocket.getOutputStream());
         while(true){
                 String clientSentence=inFromClient.readLine();
-                String [] operation=clientSentence.split(" ");
+                String [] operation;
+                if(clientSentence!=null){
+                    operation=clientSentence.split(" ");
+                }else{
+                    operation=new String[0];
+                }
                 if(operation.length==3 ){
                     if(Functions.isNumber(operation[1]) && Functions.isNumber(operation[2])){
                      try{
@@ -54,7 +58,7 @@ public class ClientHandler extends Thread {
                          unsuccessful_operation(outToClient,operation[0]);
                          System.out.println(operation[0] + " " + operation[1] + " " + operation[2] + " -> ERROR");
                         }
-                    }
+                    }else{unsuccessful_operation(outToClient, operation[0]);}
                 }
                 else {
                     unsuccessful_operation(outToClient, operation[0]);
